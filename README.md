@@ -16,7 +16,7 @@ To install the **UI Element Highlighter Tool**, add the package to your Unity pr
 
 1. Open your Unity project and navigate to **Window > Package Manager**.
 2. Click the **+** button in the top-left corner and select **Add package from git URL...**.
-3. Enter the Git URL: `https://github.com/Kjub/UI-Element-Highlighter-Tool/` and click 'Add'.
+3. Enter the Git URL: `https://github.com/Kjub/UI-Element-Highlighter-Tool.git` and click 'Add'.
 4. The package will now be installed and ready for use within your project.
 
 ## Usage

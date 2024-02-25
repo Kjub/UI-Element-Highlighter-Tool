@@ -1,22 +1,21 @@
 using UnityEditor;
 using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
 
 public class UIElementSelector : EditorWindow
 {
+
+    private Vector2 settingsScrollPosition;
+    
+    
     private static List<RectTransform> uiElements = new List<RectTransform>();
     private static RectTransform _hoveredElement;
     private Vector2 scrollPosition;
     
     private bool listUpdated = true; // Initially set to true to draw the first time
     private GUIStyle leftAlignedButtonStyle;
-    
-    private static Color fillColor = new Color(1, 1, 0, 0.25f); // Default semi-transparent yellow
-    private static Color outlineColor = Color.yellow; // Default solid yellow
-    
-    public static Color FillColor { get => fillColor; set => fillColor = value; }
-    public static Color OutlineColor { get => outlineColor; set => outlineColor = value; }
-    
+
     public static bool IsOpen
     {
         get { return Resources.FindObjectsOfTypeAll<UIElementSelector>().Length > 0; }
@@ -35,17 +34,10 @@ public class UIElementSelector : EditorWindow
         }
     }
 
-    [MenuItem("Tools/UI Element Selector")]
+    [MenuItem("Tools/UI-EHT/Element Selector")]
     public static void ShowWindow()
     {
         GetWindow<UIElementSelector>("UI Element Selector").Show();
-    }
-
-    public static void ShowAndRefresh(List<RectTransform> elements)
-    {
-        var window = GetWindow<UIElementSelector>("UI Element Selector", true);
-        window.UpdateUIElementsList(elements);
-        window.Show();
     }
 
     private void OnEnable()
@@ -76,36 +68,57 @@ public class UIElementSelector : EditorWindow
         }
     }
 
-    private void UpdateUIElementsList(List<RectTransform> elements)
+    private void UpdateUIElementsList(IEnumerable<RectTransform> elements)
     {
-        uiElements = elements;
-        listUpdated = true; // Mark that the list has been updated
-        Repaint(); // Request a repaint which will trigger OnGUI
+        uiElements.Clear(); // Clear existing items
+        
+        // Load settings from EditorPrefs
+        int ignoredLayerMask = EditorPrefs.GetInt(UIElementHighlighterSettings.IgnoredLayerMaskKey, 0);
+        string[] ignoredTags = EditorPrefs.GetString(UIElementHighlighterSettings.IgnoredTagsKey, "").Split(',');
+
+
+        foreach (RectTransform element in elements)
+        {
+            GameObject go = element.gameObject;
+            // Skip elements on ignored layers or with ignored tags
+            if (((1 << go.layer) & ignoredLayerMask) != 0 || ignoredTags.Contains(go.tag))
+            {
+                continue;
+            }
+
+            // If not ignored, add to the list
+            uiElements.Add(element);
+        }
+
+        listUpdated = true; // Indicate that the list has been updated
+        Repaint(); // Request the window to repaint
     }
 
     private void OnGUI()
     {
-        // Color pickers for customization
-        EditorGUILayout.Space(); // Add some space at the start
-        EditorGUILayout.LabelField("Highlight Colors", EditorStyles.boldLabel);
-        fillColor = EditorGUILayout.ColorField("Fill Color", fillColor);
-        outlineColor = EditorGUILayout.ColorField("Outline Color", outlineColor);
+        AddHeader();
 
-        // Add a bit more space between the color pickers and the list
-        EditorGUILayout.Space();
-        EditorGUILayout.Space();
+        AddElements();
+        
+        AddSettingsButton();
+    }
 
+    private void AddHeader()
+    {
         // Centered label "Hierarchy"
-        GUIStyle centeredStyle = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter };
+        GUIStyle centeredStyle = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold};
         EditorGUILayout.LabelField("Hierarchy", centeredStyle);
+    }
 
+    private void AddElements()
+    {
         // Add some space after the label before the list starts
         EditorGUILayout.Space();
 
         scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
 
         bool anyHoverDetectedThisFrame = false;
-        foreach (var rectTransform in uiElements)
+        foreach (RectTransform rectTransform in uiElements)
         {
             anyHoverDetectedThisFrame |= DrawElement(rectTransform); // Draw each element and check for hover
         }
@@ -118,6 +131,15 @@ public class UIElementSelector : EditorWindow
         }
     }
 
+    private void AddSettingsButton()
+    {
+        GUILayout.FlexibleSpace();
+        // Settings button
+        if (GUILayout.Button("Open Highlighter Settings", GUILayout.Height(25)))
+        {
+            UIElementHighlighterSettings.ShowWindow();
+        }
+    }
 
     private bool DrawElement(RectTransform rectTransform)
     {

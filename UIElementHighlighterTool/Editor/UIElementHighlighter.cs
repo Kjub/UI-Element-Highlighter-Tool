@@ -33,6 +33,6 @@ public class UIElementHighlighter
         rectTransform.GetWorldCorners(worldCorners);
         
         // Use Handles to draw a solid rectangle with an outline
-        Handles.DrawSolidRectangleWithOutline(worldCorners, UIElementSelector.FillColor, UIElementSelector.OutlineColor);
+        Handles.DrawSolidRectangleWithOutline(worldCorners, UIElementHighlighterSettings.GetFillColor(), UIElementHighlighterSettings.GetOutlineColor());
     }
 }

@@ -2,6 +2,9 @@
 
 The **UI Element Highlighter Tool** is a powerful Unity Editor extension designed to improve the workflow for developers and designers working with Unity's UI system. This tool offers an intuitive interface within the Unity Editor, allowing users to easily navigate, identify, and interact with `RectTransform` components in the Scene View.
 
+![UIElementHighlighterShowVideo](https://github.com/Kjub/UI-Element-Highlighter-Tool/assets/7487311/df0ca984-105d-48df-852b-fe5698e6caee)
+
+
 ## Features
 
 -   **Interactive UI Element List**: Displays a hierarchical list of all UI elements within the Scene or Prefab Editor, providing a clear overview of the UI structure. This feature simplifies navigation through complex UI hierarchies.

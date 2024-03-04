@@ -2,6 +2,8 @@ using UnityEditor;
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor.SceneManagement;
+using UnityEngine.SceneManagement;
 
 public class UIElementSelector : EditorWindow
 {
@@ -38,6 +40,10 @@ public class UIElementSelector : EditorWindow
     public static void ShowWindow()
     {
         GetWindow<UIElementSelector>("UI Element Selector").Show();
+        
+        PrefabStage.prefabStageOpened += OnPrefabStageOpened;
+        PrefabStage.prefabStageClosing += OnPrefabStageClosing;
+        EditorSceneManager.sceneOpened += OnSceneOpened;
     }
 
     private void OnEnable()
@@ -51,6 +57,29 @@ public class UIElementSelector : EditorWindow
     {
         EditorApplication.playModeStateChanged -= PlayModeStateChanged;
         UIElementClickDetection.OnElementsClicked -= UpdateUIElementsList;
+    }
+    
+    
+    private void OnDestroy()
+    {
+        PrefabStage.prefabStageOpened -= OnPrefabStageOpened;
+        PrefabStage.prefabStageClosing -= OnPrefabStageClosing;
+        EditorSceneManager.sceneOpened -= OnSceneOpened;
+    }
+    
+    private static void OnPrefabStageOpened(PrefabStage stage)
+    {
+        uiElements.Clear();
+    }
+
+    private static void OnPrefabStageClosing(PrefabStage stage)
+    {
+        uiElements.Clear();
+    }
+    
+    private static void OnSceneOpened(Scene scene, OpenSceneMode mode)
+    {
+        uiElements.Clear();
     }
 
     private void InitializeLeftAlignedButtonStyle()
@@ -200,4 +229,5 @@ public class UIElementSelector : EditorWindow
         }
         return depth;
     }
+    
 }

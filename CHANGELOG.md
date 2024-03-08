@@ -19,7 +19,7 @@ Selection Window
 -   Added information about element if its active or inactive
 -   Added option to filter only active elements
 
-## Changed
+### Changed
 
 -   Changed checking of when should extension run the element detection script. (Was on Right Click DOWN, now its on Right Click UP + no dragging)
 

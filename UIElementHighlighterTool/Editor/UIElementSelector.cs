@@ -7,16 +7,19 @@ using UnityEngine.SceneManagement;
 
 public class UIElementSelector : EditorWindow
 {
+    
+    private const string ShowOnlyEnabledPrefKey = "UIElementHighlighter_ShowEnabled";
 
-    private Vector2 settingsScrollPosition;
-    
-    
-    private static List<RectTransform> uiElements = new List<RectTransform>();
+    private Vector2 _settingsScrollPosition;
+    private static List<RectTransform> _uiElements = new List<RectTransform>();
     private static RectTransform _hoveredElement;
     private Vector2 scrollPosition;
     
-    private bool listUpdated = true; // Initially set to true to draw the first time
-    private GUIStyle leftAlignedButtonStyle;
+    private bool _listUpdated = true; // Initially set to true to draw the first time
+    private GUIStyle _leftAlignedButtonStyle;
+    
+    private bool _showOnlyEnabled = false; // Default to showing all elements
+    private bool _isInitialized;
 
     public static bool IsOpen
     {
@@ -59,55 +62,60 @@ public class UIElementSelector : EditorWindow
         UIElementClickDetection.OnElementsClicked -= UpdateUIElementsList;
     }
     
-    
     private void OnDestroy()
     {
         PrefabStage.prefabStageOpened -= OnPrefabStageOpened;
         PrefabStage.prefabStageClosing -= OnPrefabStageClosing;
         EditorSceneManager.sceneOpened -= OnSceneOpened;
     }
-    
+
     private static void OnPrefabStageOpened(PrefabStage stage)
     {
-        uiElements.Clear();
+        _uiElements.Clear();
     }
 
     private static void OnPrefabStageClosing(PrefabStage stage)
     {
-        uiElements.Clear();
+        _uiElements.Clear();
     }
     
     private static void OnSceneOpened(Scene scene, OpenSceneMode mode)
     {
-        uiElements.Clear();
+        _uiElements.Clear();
     }
 
     private void InitializeLeftAlignedButtonStyle()
     {
-        leftAlignedButtonStyle = new GUIStyle(GUI.skin.button) { alignment = TextAnchor.MiddleLeft };
+        _leftAlignedButtonStyle = new GUIStyle(GUI.skin.button) { alignment = TextAnchor.MiddleLeft, richText = true};
     }
 
     private void PlayModeStateChanged(PlayModeStateChange state)
     {
         if (state == PlayModeStateChange.EnteredPlayMode || state == PlayModeStateChange.ExitingPlayMode)
         {
-            uiElements.Clear();
-            listUpdated = true; // Ensure redraw after clearing
+            _uiElements.Clear();
+            _listUpdated = true; // Ensure redraw after clearing
             Repaint();
         }
     }
 
     private void UpdateUIElementsList(IEnumerable<RectTransform> elements)
     {
-        uiElements.Clear(); // Clear existing items
+        _uiElements.Clear(); // Clear existing items
         
         // Load settings from EditorPrefs
         int ignoredLayerMask = EditorPrefs.GetInt(UIElementHighlighterSettings.IgnoredLayerMaskKey, 0);
         string[] ignoredTags = EditorPrefs.GetString(UIElementHighlighterSettings.IgnoredTagsKey, "").Split(',');
-
-
+        bool foundRemovedElements = false;
+        
         foreach (RectTransform element in elements)
         {
+            if (element == null)
+            {
+                foundRemovedElements = true;
+                continue;
+            }
+            
             GameObject go = element.gameObject;
             // Skip elements on ignored layers or with ignored tags
             if (((1 << go.layer) & ignoredLayerMask) != 0 || ignoredTags.Contains(go.tag))
@@ -116,15 +124,24 @@ public class UIElementSelector : EditorWindow
             }
 
             // If not ignored, add to the list
-            uiElements.Add(element);
+            _uiElements.Add(element);
         }
+        
+        
+        
 
-        listUpdated = true; // Indicate that the list has been updated
+        _listUpdated = true; // Indicate that the list has been updated
         Repaint(); // Request the window to repaint
     }
 
     private void OnGUI()
     {
+        if (!_isInitialized)
+        {
+            _showOnlyEnabled = EditorPrefs.GetBool(ShowOnlyEnabledPrefKey, false);
+            _isInitialized = true;
+        }
+        
         AddHeader();
 
         AddElements();
@@ -134,22 +151,57 @@ public class UIElementSelector : EditorWindow
 
     private void AddHeader()
     {
-        // Centered label "Hierarchy"
-        GUIStyle centeredStyle = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold};
-        EditorGUILayout.LabelField("Hierarchy", centeredStyle);
+        EditorGUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace(); // This centers the following content.
+        GUIStyle centeredStyle = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold };
+        EditorGUILayout.LabelField("Hierarchy", centeredStyle, GUILayout.ExpandWidth(false)); // False allows it to stay centered.
+        GUILayout.FlexibleSpace(); // Add flexible space on both sides to keep the label centered.
+
+        AddShowOnlyEnabledToggle();
+        
+        EditorGUILayout.EndHorizontal();
+    }
+
+    private void AddShowOnlyEnabledToggle()
+    {
+        EditorGUI.BeginChangeCheck();
+        _showOnlyEnabled = EditorGUILayout.ToggleLeft("Show only active elements", _showOnlyEnabled, GUILayout.Width(200));
+        if (EditorGUI.EndChangeCheck())
+        {
+            // Save the new toggle state
+            EditorPrefs.SetBool(ShowOnlyEnabledPrefKey, _showOnlyEnabled);
+        }
     }
 
     private void AddElements()
     {
         // Add some space after the label before the list starts
         EditorGUILayout.Space();
-
         scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
 
         bool anyHoverDetectedThisFrame = false;
-        foreach (RectTransform rectTransform in uiElements)
+        bool foundRemovedElements = false;
+        foreach (RectTransform rectTransform in _uiElements)
         {
+            if (rectTransform == null)
+            {
+                foundRemovedElements = true;
+                continue;
+            }
+            
+            bool elementIsEnabled = rectTransform.gameObject.activeSelf;
+            if (_showOnlyEnabled && !elementIsEnabled)
+            {
+                // If we're only showing enabled elements, skip disabled ones
+                continue;
+            }
+
             anyHoverDetectedThisFrame |= DrawElement(rectTransform); // Draw each element and check for hover
+        }
+
+        if (foundRemovedElements == true)
+        {
+            _uiElements.RemoveAll(rectTransform => rectTransform == null);
         }
 
         EditorGUILayout.EndScrollView();
@@ -172,17 +224,19 @@ public class UIElementSelector : EditorWindow
 
     private bool DrawElement(RectTransform rectTransform)
     {
-        int depth = CalculateDepth(rectTransform) - 1;
+        int depth = Mathf.Max(0, CalculateDepth(rectTransform) - 1);
+        bool elementIsEnabled = rectTransform.gameObject.activeSelf; // Get the enabled state of the GameObject
 
         EditorGUILayout.BeginHorizontal();
         GUILayout.Space(20 * depth);
-        Rect buttonRect = GUILayoutUtility.GetRect(new GUIContent(rectTransform.name), leftAlignedButtonStyle, GUILayout.Height(20));
-
-        if (GUI.Button(buttonRect, rectTransform.name, leftAlignedButtonStyle))
+        string statusText = elementIsEnabled ? "Active" : "Inactive";
+        string buttonText = $"{rectTransform.name} - <b><color={(elementIsEnabled ? "green" : "red")}>{statusText}</color></b>";
+        
+        if (GUILayout.Button(buttonText, _leftAlignedButtonStyle))
         {
             Selection.activeGameObject = rectTransform.gameObject;
         }
-
+        
         EditorGUILayout.EndHorizontal();
         
         if (Event.current.type == EventType.Repaint)
@@ -191,6 +245,7 @@ public class UIElementSelector : EditorWindow
             DrawHierarchyLines(depth, lastRect);
         }
 
+        Rect buttonRect = GUILayoutUtility.GetLastRect();
         // Check for hover
         if (buttonRect.Contains(Event.current.mousePosition))
         {

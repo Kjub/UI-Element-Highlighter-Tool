@@ -51,7 +51,11 @@ public class UIElementHighlighterSettings : EditorWindow
             EditorGUI.BeginDisabledGroup(true);
         }
         
-        GUILayout.Space(20f);
+        GUILayout.Space(30f);
+        
+        string selectComponent = EditorGUILayout.TextField("Select Component", GetSavedString("SelectComponent", "RectTransform"));
+        
+        GUILayout.Space(10f);
 
         Color fillColor = EditorGUILayout.ColorField("Fill Color", GetSavedColor(FillColorKey, defaultFillColor));
         Color outlineColor = EditorGUILayout.ColorField("Outline Color", GetSavedColor(OutlineColorKey, defaultOutlineColor));
@@ -68,6 +72,7 @@ public class UIElementHighlighterSettings : EditorWindow
         {
             SaveColor(FillColorKey, fillColor);
             SaveColor(OutlineColorKey, outlineColor);
+            EditorPrefs.SetString("SelectComponent", selectComponent);
             EditorPrefs.SetInt(IgnoredLayerMaskKey, ignoredLayerMask);
             EditorPrefs.SetString(IgnoredTagsKey, string.Join(",", ignoredTags));
         }
@@ -145,6 +150,11 @@ public class UIElementHighlighterSettings : EditorWindow
 
         EditorGUI.indentLevel--;
     }
+    
+    private static string GetSavedString(string key, string defaultValue)
+    {
+        return EditorPrefs.GetString(key, defaultValue);
+    }
 
     private static Color GetSavedColor(string key, Color defaultColor)
     {
@@ -166,6 +176,11 @@ public class UIElementHighlighterSettings : EditorWindow
     public static Color GetOutlineColor()
     {
         return GetSavedColor(OutlineColorKey, defaultOutlineColor);
+    }
+    
+    public static string GetSelectedComponent()
+    {
+        return GetSavedString("SelectComponent", "RectTransform");
     }
     
     // Wrapper methods for EditorGUILayout's static methods

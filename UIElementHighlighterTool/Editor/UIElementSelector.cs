@@ -53,7 +53,6 @@ public class UIElementSelector : EditorWindow
     {
         EditorApplication.playModeStateChanged += PlayModeStateChanged;
         UIElementClickDetection.OnElementsClicked += UpdateUIElementsList;
-        InitializeLeftAlignedButtonStyle();
     }
 
     private void OnDisable()
@@ -106,13 +105,11 @@ public class UIElementSelector : EditorWindow
         // Load settings from EditorPrefs
         int ignoredLayerMask = EditorPrefs.GetInt(UIElementHighlighterSettings.IgnoredLayerMaskKey, 0);
         string[] ignoredTags = EditorPrefs.GetString(UIElementHighlighterSettings.IgnoredTagsKey, "").Split(',');
-        bool foundRemovedElements = false;
         
         foreach (RectTransform element in elements)
         {
             if (element == null)
             {
-                foundRemovedElements = true;
                 continue;
             }
             
@@ -126,9 +123,6 @@ public class UIElementSelector : EditorWindow
             // If not ignored, add to the list
             _uiElements.Add(element);
         }
-        
-        
-        
 
         _listUpdated = true; // Indicate that the list has been updated
         Repaint(); // Request the window to repaint
@@ -138,6 +132,7 @@ public class UIElementSelector : EditorWindow
     {
         if (!_isInitialized)
         {
+            InitializeLeftAlignedButtonStyle();
             _showOnlyEnabled = EditorPrefs.GetBool(ShowOnlyEnabledPrefKey, false);
             _isInitialized = true;
         }

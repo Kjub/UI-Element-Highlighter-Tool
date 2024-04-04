@@ -1,8 +1,11 @@
-﻿using UnityEditor;
+﻿using System;
+using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using UIElementHighlighterTool.Editor;
+using Object = UnityEngine.Object;
 
 [InitializeOnLoad]
 public static class UIElementClickDetection
@@ -69,9 +72,22 @@ public static class UIElementClickDetection
 
         List<RectTransform> hitUIElements = new List<RectTransform>();
         Camera sceneCamera = SceneView.currentDrawingSceneView.camera;
+        
+        string selectedComponent = UIElementHighlighterSettings.GetSelectedComponent();
+        Type selectedComponentType = UIElementHighlighterUtils.GetTypeFromName(selectedComponent);
+
+        if (selectedComponentType == null)
+        {
+            selectedComponentType = typeof(RectTransform);
+        }
 
         foreach (RectTransform rectTransform in allRectTransforms)
         {
+            if (rectTransform.GetComponent(selectedComponentType) == null)
+            {
+                continue;
+            }
+            
             Vector3[] worldCorners = new Vector3[4];
             rectTransform.GetWorldCorners(worldCorners);
             Vector2[] screenCorners = new Vector2[4];

@@ -27,3 +27,15 @@ Selection Window
 
 -   Fixed error when unity wanted to create .meta file but couldn't
 -   Fixed error when user deleted an element from hierarchy that was shown in selection window
+
+## [0.2.1] - 05.04.2024
+
+### Added
+
+Settings Window
+
+-   "Select Component" option in settings, let's you filter items with this component (default to RectTransform)
+
+### Fixed
+
+-   Error when the extension tried to create GUIStyle outside OnGUI method

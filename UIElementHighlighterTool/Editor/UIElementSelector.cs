@@ -184,8 +184,7 @@ public class UIElementSelector : EditorWindow
                 continue;
             }
             
-            bool elementIsEnabled = rectTransform.gameObject.activeSelf;
-            if (_showOnlyEnabled && !elementIsEnabled)
+            if (_showOnlyEnabled && IsEnabledIncludingParents(rectTransform.gameObject) == false)
             {
                 // If we're only showing enabled elements, skip disabled ones
                 continue;
@@ -205,6 +204,23 @@ public class UIElementSelector : EditorWindow
         {
             hoveredElement = null; // Reset hovered element if no hover detected
         }
+    }
+    
+    private bool IsEnabledIncludingParents(GameObject gameObject)
+    {
+        // If the GameObject itself is not active, return false immediately
+        if (!gameObject.activeInHierarchy) return false;
+
+        // Recursively check the parent
+        Transform parent = gameObject.transform.parent;
+        while (parent != null)
+        {
+            if (!parent.gameObject.activeInHierarchy) return false;
+            parent = parent.parent;
+        }
+
+        // If we've made it here, the GameObject and all its parents are active
+        return true;
     }
 
     private void AddSettingsButton()

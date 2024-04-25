@@ -246,6 +246,12 @@ public class UIElementSelector : EditorWindow
         if (GUILayout.Button(buttonText, _leftAlignedButtonStyle))
         {
             Selection.activeGameObject = rectTransform.gameObject;
+            if (UIElementHighlighterSettings.GetAutoCloseOnSelect() == true)
+            {
+                EditorGUILayout.EndHorizontal();
+                Close();
+                return false;
+            }
         }
         
         EditorGUILayout.EndHorizontal();

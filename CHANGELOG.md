@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.2.3] - 25.04.2024
+
+### Added
+
+-   "Ability to set if you want to close the selector window upon selecting an element from it"
+
 ## [0.2.2] - 05.04.2024
 
 ### Updated

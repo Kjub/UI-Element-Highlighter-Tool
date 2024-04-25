@@ -21,6 +21,8 @@ public class UIElementHighlighterSettings : EditorWindow
     internal const string OutlineColorKey = "UIElementHighlighter_OutlineColor";
     internal const string IgnoredLayerMaskKey = "UIElementHighlighter_IgnoredLayerMask";
     internal const string IgnoredTagsKey = "UIElementHighlighter_IgnoredTags";
+    private const string AutoCloseOnSelect = "UIElementHighlighter_AutoClose";
+    private const string SelectComponent = "UIElementHighlighter_SelectComponent";
     private const string ExtensionEnabledKey = "UIElementHighlighter_Enabled";
 
     private const string _enabledText = "Extension is ENABLED \n Click to disable";
@@ -53,7 +55,8 @@ public class UIElementHighlighterSettings : EditorWindow
         
         GUILayout.Space(30f);
         
-        string selectComponent = EditorGUILayout.TextField("Select Component", GetSavedString("SelectComponent", "RectTransform"));
+        string selectComponent = EditorGUILayout.TextField("Select Component", GetSavedString(SelectComponent, "RectTransform"));
+        bool autoCloseOnSelect = EditorGUILayout.Toggle("Auto Close On Select", GetSavedBool(AutoCloseOnSelect, false));
         
         GUILayout.Space(10f);
 
@@ -72,7 +75,8 @@ public class UIElementHighlighterSettings : EditorWindow
         {
             SaveColor(FillColorKey, fillColor);
             SaveColor(OutlineColorKey, outlineColor);
-            EditorPrefs.SetString("SelectComponent", selectComponent);
+            EditorPrefs.SetBool(AutoCloseOnSelect, autoCloseOnSelect);
+            EditorPrefs.SetString(SelectComponent, selectComponent);
             EditorPrefs.SetInt(IgnoredLayerMaskKey, ignoredLayerMask);
             EditorPrefs.SetString(IgnoredTagsKey, string.Join(",", ignoredTags));
         }
@@ -151,6 +155,11 @@ public class UIElementHighlighterSettings : EditorWindow
         EditorGUI.indentLevel--;
     }
     
+    private static bool GetSavedBool(string key, bool defaultValue)
+    {
+        return EditorPrefs.GetBool(key, defaultValue);
+    }
+    
     private static string GetSavedString(string key, string defaultValue)
     {
         return EditorPrefs.GetString(key, defaultValue);
@@ -180,7 +189,12 @@ public class UIElementHighlighterSettings : EditorWindow
     
     public static string GetSelectedComponent()
     {
-        return GetSavedString("SelectComponent", "RectTransform");
+        return GetSavedString(SelectComponent, "RectTransform");
+    }
+
+    public static bool GetAutoCloseOnSelect()
+    {
+        return GetSavedBool(AutoCloseOnSelect, false);
     }
     
     // Wrapper methods for EditorGUILayout's static methods

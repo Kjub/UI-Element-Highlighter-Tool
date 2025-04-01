@@ -17,6 +17,9 @@ public static class UIElementClickDetection
     private const string ExtensionEnabledKey = "UIElementHighlighter_Enabled";
     private static bool isRightMouseDown = false;
     private static bool hasDragged = false;
+    
+    private static Vector2 _mousePosition = new Vector2();
+    private static Camera _sceneDrawingCamera = null;
 
     static UIElementClickDetection()
     {
@@ -41,37 +44,48 @@ public static class UIElementClickDetection
 
     private static void OnSceneGUI(SceneView sceneView)
     {
+        UIElementHighlighterBinding binding = UIElementHighlighterSettings.LoadShortcut();
+
         Event e = Event.current;
-        
-        if (e.type == EventType.MouseDown && e.button == 1)
+
+        bool modifierMatch =
+            binding.ctrl == (e.control || e.command) &&
+            binding.shift == e.shift &&
+            binding.alt == e.alt;
+
+        if (binding.IsMouse)
         {
-            isRightMouseDown = true;
-            hasDragged = false;
-        }
-        else if (e.type == EventType.MouseDrag && isRightMouseDown)
-        {
-            hasDragged = true;
-        }
-        else if (e.type == EventType.MouseUp && e.button == 1)
-        {
-            if (isRightMouseDown && !hasDragged)
+            if (e.type == EventType.MouseDown && e.button == binding.mouseButton && modifierMatch)
             {
                 DetectElementUnderClick(e.mousePosition);
-                // e.Use(); // Mark the event as used
+                e.Use();
             }
-            
-            isRightMouseDown = false;
-            hasDragged = false;
         }
+        else
+        {
+            if (e.type == EventType.KeyDown && e.keyCode == binding.mainKey && modifierMatch)
+            {
+                DetectElementUnderClick(e.mousePosition);
+                e.Use();
+            }
+        }
+
     }
+    
+    [MenuItem("CONTEXT/GameObjectToolContext/UI Highlight")]
+    static void Init()
+    {
+        DetectElementUnderClick(_mousePosition);
+    }
+
 
     private static void DetectElementUnderClick(Vector2 eventMousePosition)
     {
         Vector2 mousePosition = eventMousePosition;
-        mousePosition.y = SceneView.currentDrawingSceneView.camera.pixelHeight - mousePosition.y;
+        Camera camera = SceneView.currentDrawingSceneView.camera;
+        mousePosition.y = camera.pixelHeight - mousePosition.y;
 
         List<RectTransform> hitUIElements = new List<RectTransform>();
-        Camera sceneCamera = SceneView.currentDrawingSceneView.camera;
         
         string selectedComponent = UIElementHighlighterSettings.GetSelectedComponent();
         Type selectedComponentType = UIElementHighlighterUtils.GetTypeFromName(selectedComponent);
@@ -93,7 +107,7 @@ public static class UIElementClickDetection
             Vector2[] screenCorners = new Vector2[4];
             for (int i = 0; i < 4; i++)
             {
-                screenCorners[i] = RectTransformUtility.WorldToScreenPoint(sceneCamera, worldCorners[i]);
+                screenCorners[i] = RectTransformUtility.WorldToScreenPoint(camera, worldCorners[i]);
             }
 
             Rect rect = Rect.MinMaxRect(screenCorners.Min(corner => corner.x), screenCorners.Min(corner => corner.y), screenCorners.Max(corner => corner.x), screenCorners.Max(corner => corner.y));

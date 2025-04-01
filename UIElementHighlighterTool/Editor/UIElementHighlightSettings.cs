@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UIElementHighlighterTool.Editor;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
@@ -15,6 +16,8 @@ public class UIElementHighlighterSettings : EditorWindow
     private static Color defaultOutlineColor = Color.yellow;
     private static bool isExtensionEnabled;
     private static int _ignoredLayerMask;
+    
+    private Texture2D logoTexture;
 
     // Keys for EditorPrefs
     internal const string FillColorKey = "UIElementHighlighter_FillColor";
@@ -28,7 +31,12 @@ public class UIElementHighlighterSettings : EditorWindow
     private const string _enabledText = "Extension is ENABLED \n Click to disable";
     private const string _disabledText = "Extension is DISABLED \n Click to enable";
     
+    private static bool isListeningForShortcut = false;
+    private static KeyCode currentShortcutKey;
+    private const string ShortcutKeyPref = "UIElementHighlighter_ShortcutKey";
+    
     private static List<string> ignoredTags = new List<string>();
+    
 
     [MenuItem("Tools/UI-EHT/Highlighter Settings")]
     public static void ShowWindow()
@@ -36,12 +44,17 @@ public class UIElementHighlighterSettings : EditorWindow
         GetWindow<UIElementHighlighterSettings>("Highlighter Settings");
     }
 
+    private void OnEnable()
+    {
+        logoTexture = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Editor/UIElementHighlighterTool/Editor/Assets/logo_name.png");
+    }
+
     private void OnGUI()
     {
         // Using EditorPrefs to get and set colors
+        CreateLogo();
         EditorGUI.BeginChangeCheck();
         
-        GUILayout.Label("Settings", EditorStyles.boldLabel);
         isExtensionEnabled = EditorPrefs.GetBool(ExtensionEnabledKey, true);
         
         DrawToggleExtensionButton();
@@ -49,17 +62,20 @@ public class UIElementHighlighterSettings : EditorWindow
         // If the extension is disabled, draw a semi-transparent overlay
         if (isExtensionEnabled == false)
         {
-            EditorGUI.DrawRect(new Rect(0, 60, position.width, position.height - 60), new Color(0, 0, 0, 0.5f));
+            EditorGUI.DrawRect(new Rect(0, 214, position.width, position.height), new Color(0, 0, 0, 0.5f));
             EditorGUI.BeginDisabledGroup(true);
         }
+
+        DrawSetShortcutButton();
         
         GUILayout.Space(30f);
         
-        string selectComponent = EditorGUILayout.TextField("Select Component", GetSavedString(SelectComponent, "RectTransform"));
+        // string selectComponent = EditorGUILayout.TextField("Select Component", GetSavedString(SelectComponent, "RectTransform"));
         bool autoCloseOnSelect = EditorGUILayout.Toggle("Auto Close On Select", GetSavedBool(AutoCloseOnSelect, false));
         
         GUILayout.Space(10f);
 
+        GUILayout.Label("Colors", UIElementHighlighterUtils.GetCenteredLabelStyle());
         Color fillColor = EditorGUILayout.ColorField("Fill Color", GetSavedColor(FillColorKey, defaultFillColor));
         Color outlineColor = EditorGUILayout.ColorField("Outline Color", GetSavedColor(OutlineColorKey, defaultOutlineColor));
 
@@ -76,9 +92,30 @@ public class UIElementHighlighterSettings : EditorWindow
             SaveColor(FillColorKey, fillColor);
             SaveColor(OutlineColorKey, outlineColor);
             EditorPrefs.SetBool(AutoCloseOnSelect, autoCloseOnSelect);
-            EditorPrefs.SetString(SelectComponent, selectComponent);
+            // EditorPrefs.SetString(SelectComponent, selectComponent);
             EditorPrefs.SetInt(IgnoredLayerMaskKey, ignoredLayerMask);
             EditorPrefs.SetString(IgnoredTagsKey, string.Join(",", ignoredTags));
+        }
+    }
+
+    private void CreateLogo()
+    {
+        GUILayout.Space(10f);
+
+        if (logoTexture != null)
+        {
+            float maxWidth = 600f;
+            float logoAspect = (float)logoTexture.height / logoTexture.width;
+            float displayWidth = Mathf.Min(position.width, maxWidth);
+            float displayHeight = displayWidth * logoAspect;
+
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            GUILayout.Label(logoTexture, GUILayout.Width(displayWidth), GUILayout.Height(displayHeight));
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+            GUILayout.Space(10f);
         }
     }
 
@@ -109,11 +146,89 @@ public class UIElementHighlighterSettings : EditorWindow
         UIElementClickDetection.ExtensionEnabled(isExtensionEnabled);
     }
 
+    private void DrawSetShortcutButton()
+    {
+        GUILayout.Space(10f);
+        GUILayout.Label("Shortcut", UIElementHighlighterUtils.GetCenteredLabelStyle());
+        
+        UIElementHighlighterBinding current = LoadShortcut();
+
+        string buttonText;
+        if (isListeningForShortcut)
+        {
+            buttonText = "Press key or mouse button to set shortcut...";
+        }
+        else
+        {
+            buttonText = $"Click to change shortcut\n(Current: {current})";
+        }
+
+        GUIStyle shortcutButtonStyle = new GUIStyle(GUI.skin.button);
+        shortcutButtonStyle.wordWrap = true;
+        shortcutButtonStyle.alignment = TextAnchor.MiddleCenter;
+        shortcutButtonStyle.fontSize = 12;
+        shortcutButtonStyle.fixedHeight = 40;
+        
+        if (GUILayout.Button(buttonText, shortcutButtonStyle, GUILayout.ExpandWidth(true)))
+        {
+            isListeningForShortcut = true;
+            GUI.FocusControl(null); // remove keyboard focus
+        }
+
+        if (isListeningForShortcut)
+        {
+            Event e = Event.current;
+
+            if (e.type == EventType.KeyDown)
+            {
+                if (e.keyCode == KeyCode.LeftControl || e.keyCode == KeyCode.RightControl ||
+                    e.keyCode == KeyCode.LeftShift || e.keyCode == KeyCode.RightShift ||
+                    e.keyCode == KeyCode.LeftAlt || e.keyCode == KeyCode.RightAlt)
+                {
+                    e.Use(); // keep listening
+                }
+                else
+                {
+                    var newBinding = new UIElementHighlighterBinding
+                    {
+                        mainKey = e.keyCode,
+                        mouseButton = -1,
+                        ctrl = e.control || e.command,
+                        shift = e.shift,
+                        alt = e.alt
+                    };
+
+                    SaveShortcut(newBinding);
+                    isListeningForShortcut = false;
+                    Repaint();
+                    e.Use();
+                }
+            }
+            else if (e.type == EventType.MouseDown)
+            {
+                var newBinding = new UIElementHighlighterBinding
+                {
+                    mainKey = KeyCode.None,
+                    mouseButton = e.button,
+                    ctrl = e.control || e.command,
+                    shift = e.shift,
+                    alt = e.alt
+                };
+
+                SaveShortcut(newBinding);
+                isListeningForShortcut = false;
+                Repaint();
+                e.Use();
+            }
+        }
+
+    }
+
     private int DrawIgnoredLayersSection()
     {
         EditorGUILayout.Space();
         EditorGUILayout.Space();
-        GUILayout.Label("Ignored Layers", EditorStyles.boldLabel);
+        GUILayout.Label("Ignored Layers", UIElementHighlighterUtils.GetCenteredLabelStyle());
         int displayMask = LayerMaskToConcatenatedLayersMask(EditorPrefs.GetInt("IgnoredLayerMask", 0));
         int newDisplayMask = EditorGUILayout.MaskField("", displayMask, InternalEditorUtility.layers);
 
@@ -131,7 +246,7 @@ public class UIElementHighlighterSettings : EditorWindow
     {
         EditorGUILayout.Space();
         EditorGUILayout.Space();
-        GUILayout.Label("Ignored Tags", EditorStyles.boldLabel);
+        GUILayout.Label("Ignored Tags", UIElementHighlighterUtils.GetCenteredLabelStyle(anchor: TextAnchor.LowerLeft));
         EditorGUI.indentLevel++;
 
         // Load ignored tags from EditorPrefs
@@ -206,6 +321,22 @@ public class UIElementHighlighterSettings : EditorWindow
     private int ConcatenatedLayersMaskToLayerMask(int concatenatedMask)
     {
         return InternalEditorUtility.ConcatenatedLayersMaskToLayerMask(concatenatedMask);
+    }
+    
+    private const string ShortcutBindingKey = "UIElementHighlighter_ShortcutBinding";
+
+    public static UIElementHighlighterBinding LoadShortcut()
+    {
+        string json = EditorPrefs.GetString(ShortcutBindingKey, "");
+        if (string.IsNullOrEmpty(json))
+            return new UIElementHighlighterBinding { mainKey = KeyCode.H, mouseButton = -1 };
+        return JsonUtility.FromJson<UIElementHighlighterBinding>(json);
+    }
+
+    private static void SaveShortcut(UIElementHighlighterBinding binding)
+    {
+        string json = JsonUtility.ToJson(binding);
+        EditorPrefs.SetString(ShortcutBindingKey, json);
     }
     
     // Helper method to create a colored texture

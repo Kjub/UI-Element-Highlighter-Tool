@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEditor.Graphs;
 using UnityEngine;
 
 namespace UIElementHighlighterTool.Editor
@@ -30,6 +31,23 @@ namespace UIElementHighlighterTool.Editor
             // If not found, log an error
             Debug.LogError($"Type not found for component name: {typeName}");
             return null;
+        }
+        
+        public static GUIStyle GetCenteredLabelStyle(int fontSize = 12, Color color = default, TextAnchor anchor = TextAnchor.LowerCenter)
+        {
+            GUIStyle style = new GUIStyle(GUI.skin.label)
+            {
+                alignment = anchor,
+                fontSize = fontSize,
+                fontStyle = FontStyle.Bold
+            };
+
+            if (color != default)
+            {
+                style.normal.textColor = color;
+            }
+
+            return style;
         }
     }
 }

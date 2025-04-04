@@ -7,7 +7,7 @@ namespace UIElementHighlighterTool.Editor
     {
         private const string WelcomeShownKey = "UIElementHighlighter_WelcomeShown";
         private Texture2D welcomeLogo;
-        
+
         public static void ShowManually()
         {
             UIElementHighlighterWelcome window = GetWindow<UIElementHighlighterWelcome>("Welcome");
@@ -40,9 +40,9 @@ namespace UIElementHighlighterTool.Editor
         private void OnEnable()
         {
             welcomeLogo = AssetDatabase.LoadAssetAtPath<Texture2D>(
-                "Packages/com.kjub.uielementhighlighter/Editor/Assets/logo_512x512.png"
+                "Packages/com.kjub.uielementhighlighter/Editor/Assets/logo512x512.png"
             );
-            
+
             SceneView.duringSceneGui += OnSceneGUI;
         }
 
@@ -59,7 +59,7 @@ namespace UIElementHighlighterTool.Editor
                 ShowManually();
             }
         }
-        
+
         private void OnGUI()
         {
             GUILayout.Space(10);
@@ -84,7 +84,7 @@ namespace UIElementHighlighterTool.Editor
             wrapStyle.wordWrap = true;
             wrapStyle.richText = true;
             wrapStyle.fontSize = 14;
-            
+
 
             GUILayout.Label(
                 $"This tool lets you detect, highlight and search through overlapping UI elements by pressing <color=\"green\">{UIElementHighlighterSettings.LoadShortcut()}</color> on top of UI element in the Scene.\n\n" +
@@ -93,12 +93,12 @@ namespace UIElementHighlighterTool.Editor
                 GUILayout.ExpandWidth(true)
             );
             GUILayout.Space(20);
-            
-            #if UNITY_6000_0_OR_NEWER
+
+#if UNITY_6000_0_OR_NEWER
             
             EditorGUILayout.HelpBox("In Unity6 and above, you can right click in scene view and select \"UI Highlight\" to highlight elements too.", MessageType.Info);
             
-            #endif
+#endif
 
             GUILayout.FlexibleSpace();
 
@@ -108,8 +108,8 @@ namespace UIElementHighlighterTool.Editor
                 UIElementHighlighterSettings.ShowWindow();
                 Close();
             }
-            
-          
+
+
         }
     }
 }

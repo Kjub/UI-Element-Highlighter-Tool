@@ -1,8 +1,16 @@
 # Changelog
 
+
+## [0.3.2] - 04.04.2025
+
+### Changed
+
+ - Changed folder structure of project
+
 ## [0.3.1] - 04.04.2025
 
-###
+### Fixed
+
  - Fixed logo in settings window
 
 ## [0.3.0] - 04.04.2025

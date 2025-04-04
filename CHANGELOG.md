@@ -1,24 +1,29 @@
 # Changelog
 
+## [0.3.3] - 04.04.2025
+
+### Added
+
+-   Welcome Screen on first run (install)
 
 ## [0.3.2] - 04.04.2025
 
 ### Changed
 
- - Changed folder structure of project
+-   Changed folder structure of project
 
 ## [0.3.1] - 04.04.2025
 
 ### Fixed
 
- - Fixed logo in settings window
+-   Fixed logo in settings window
 
 ## [0.3.0] - 04.04.2025
 
 ### Added
 
-- "Unity 6 context menu option when right clicking in Scene window"
-- "Ability to set shortcut which will run extension's logic on mouse position (default is set to "H" key). Shortcut can be combination of CTRL/SHIFT/ALT  + Keybind/Mousebind"
+-   "Unity 6 context menu option when right clicking in Scene window"
+-   "Ability to set shortcut which will run extension's logic on mouse position (default is set to "H" key). Shortcut can be combination of CTRL/SHIFT/ALT + Keybind/Mousebind"
 
 ## [0.2.3] - 25.04.2024
 

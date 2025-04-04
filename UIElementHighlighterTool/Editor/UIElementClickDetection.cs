@@ -21,14 +21,17 @@ public static class UIElementClickDetection
     private static Vector2 _mousePosition = new Vector2();
     private static Camera _sceneDrawingCamera = null;
 
+    private static bool IsEnabled = false;
+
     static UIElementClickDetection()
     {
-        bool isExtensionEnabled = EditorPrefs.GetBool(ExtensionEnabledKey, true);
-        ExtensionEnabled(isExtensionEnabled);
+        IsEnabled = EditorPrefs.GetBool(ExtensionEnabledKey, true);
+        ExtensionEnabled(IsEnabled);
     }
 
     public static void ExtensionEnabled(bool enabled)
     {
+        IsEnabled = enabled;
         if (enabled == true)
         {
             SceneView.duringSceneGui += OnSceneGUI;
@@ -47,6 +50,8 @@ public static class UIElementClickDetection
         UIElementHighlighterBinding binding = UIElementHighlighterSettings.LoadShortcut();
 
         Event e = Event.current;
+        _mousePosition = e.mousePosition;
+        _sceneDrawingCamera = sceneView.camera;
 
         bool modifierMatch =
             binding.ctrl == (e.control || e.command) &&
@@ -57,7 +62,7 @@ public static class UIElementClickDetection
         {
             if (e.type == EventType.MouseDown && e.button == binding.mouseButton && modifierMatch)
             {
-                DetectElementUnderClick(e.mousePosition);
+                DetectElementUnderClick(_mousePosition);
                 e.Use();
             }
         }
@@ -65,7 +70,7 @@ public static class UIElementClickDetection
         {
             if (e.type == EventType.KeyDown && e.keyCode == binding.mainKey && modifierMatch)
             {
-                DetectElementUnderClick(e.mousePosition);
+                DetectElementUnderClick(_mousePosition);
                 e.Use();
             }
         }
@@ -73,17 +78,22 @@ public static class UIElementClickDetection
     }
     
     [MenuItem("CONTEXT/GameObjectToolContext/UI Highlight")]
-    static void Init()
+    static void OnDetectClick()
     {
         DetectElementUnderClick(_mousePosition);
+    }
+    
+    [MenuItem("CONTEXT/GameObjectToolContext/UI Highlight", true)]
+    static bool OnDetectClickValidate()
+    {
+        return IsEnabled;
     }
 
 
     private static void DetectElementUnderClick(Vector2 eventMousePosition)
     {
         Vector2 mousePosition = eventMousePosition;
-        Camera camera = SceneView.currentDrawingSceneView.camera;
-        mousePosition.y = camera.pixelHeight - mousePosition.y;
+        mousePosition.y = _sceneDrawingCamera.pixelHeight - mousePosition.y;
 
         List<RectTransform> hitUIElements = new List<RectTransform>();
         
@@ -107,7 +117,7 @@ public static class UIElementClickDetection
             Vector2[] screenCorners = new Vector2[4];
             for (int i = 0; i < 4; i++)
             {
-                screenCorners[i] = RectTransformUtility.WorldToScreenPoint(camera, worldCorners[i]);
+                screenCorners[i] = RectTransformUtility.WorldToScreenPoint(_sceneDrawingCamera, worldCorners[i]);
             }
 
             Rect rect = Rect.MinMaxRect(screenCorners.Min(corner => corner.x), screenCorners.Min(corner => corner.y), screenCorners.Max(corner => corner.x), screenCorners.Max(corner => corner.y));

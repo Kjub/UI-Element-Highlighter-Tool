@@ -52,7 +52,7 @@ public class UIElementHighlighterSettings : EditorWindow
     private void OnGUI()
     {
         // Using EditorPrefs to get and set colors
-        CreateLogo();
+        float logoHeight = CreateLogo();
         EditorGUI.BeginChangeCheck();
         
         isExtensionEnabled = EditorPrefs.GetBool(ExtensionEnabledKey, true);
@@ -62,11 +62,12 @@ public class UIElementHighlighterSettings : EditorWindow
         // If the extension is disabled, draw a semi-transparent overlay
         if (isExtensionEnabled == false)
         {
-            EditorGUI.DrawRect(new Rect(0, 214, position.width, position.height), new Color(0, 0, 0, 0.5f));
+            //logo height + button height
+            EditorGUI.DrawRect(new Rect(0, logoHeight + 66, position.width, position.height), new Color(0, 0, 0, 0.5f));
             EditorGUI.BeginDisabledGroup(true);
         }
 
-        DrawSetShortcutButton();
+        DrawShortcutPart();
         
         GUILayout.Space(30f);
         
@@ -98,16 +99,17 @@ public class UIElementHighlighterSettings : EditorWindow
         }
     }
 
-    private void CreateLogo()
+    private float CreateLogo()
     {
         GUILayout.Space(10f);
+        float displayHeight = 0;
 
         if (logoTexture != null)
         {
             float maxWidth = 600f;
             float logoAspect = (float)logoTexture.height / logoTexture.width;
             float displayWidth = Mathf.Min(position.width, maxWidth);
-            float displayHeight = displayWidth * logoAspect;
+            displayHeight = displayWidth * logoAspect;
 
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
@@ -117,6 +119,8 @@ public class UIElementHighlighterSettings : EditorWindow
 
             GUILayout.Space(10f);
         }
+
+        return displayHeight;
     }
 
     private void DrawToggleExtensionButton()
@@ -146,38 +150,24 @@ public class UIElementHighlighterSettings : EditorWindow
         UIElementClickDetection.ExtensionEnabled(isExtensionEnabled);
     }
 
-    private void DrawSetShortcutButton()
+    private void DrawShortcutPart()
     {
         GUILayout.Space(10f);
         GUILayout.Label("Shortcut", UIElementHighlighterUtils.GetCenteredLabelStyle());
         
-        UIElementHighlighterBinding current = LoadShortcut();
-
-        string buttonText;
-        if (isListeningForShortcut)
-        {
-            buttonText = "Press key or mouse button to set shortcut...";
-        }
-        else
-        {
-            buttonText = $"Click to change shortcut\n(Current: {current})";
-        }
-
-        GUIStyle shortcutButtonStyle = new GUIStyle(GUI.skin.button);
-        shortcutButtonStyle.wordWrap = true;
-        shortcutButtonStyle.alignment = TextAnchor.MiddleCenter;
-        shortcutButtonStyle.fontSize = 12;
-        shortcutButtonStyle.fixedHeight = 40;
-        
-        if (GUILayout.Button(buttonText, shortcutButtonStyle, GUILayout.ExpandWidth(true)))
-        {
-            isListeningForShortcut = true;
-            GUI.FocusControl(null); // remove keyboard focus
-        }
+        DrawShortcutButton();
 
         if (isListeningForShortcut)
         {
             Event e = Event.current;
+            
+            if (e.type == EventType.KeyDown && e.keyCode == KeyCode.Escape)
+            {
+                isListeningForShortcut = false;
+                Repaint();
+                e.Use();
+                return;
+            }
 
             if (e.type == EventType.KeyDown)
             {
@@ -222,6 +212,40 @@ public class UIElementHighlighterSettings : EditorWindow
             }
         }
 
+    }
+
+    private void DrawShortcutButton()
+    {
+        UIElementHighlighterBinding current = LoadShortcut();
+        
+        string buttonText;
+        if (isListeningForShortcut)
+        {
+            buttonText = "Press key or mouse button to set shortcut... (CTRL/SHIFT/ALT + Key or Mouse Button)";
+        }
+        else
+        {
+            buttonText = $"Click to change shortcut\n(Current: {current})";
+        }
+        
+        if (isListeningForShortcut == true)
+        {
+            GUI.enabled = false;
+        }
+
+        GUIStyle shortcutButtonStyle = new GUIStyle(GUI.skin.button);
+        shortcutButtonStyle.wordWrap = true;
+        shortcutButtonStyle.alignment = TextAnchor.MiddleCenter;
+        shortcutButtonStyle.fontSize = 12;
+        shortcutButtonStyle.fixedHeight = 40;
+        
+        if (GUILayout.Button(buttonText, shortcutButtonStyle, GUILayout.ExpandWidth(true)))
+        {
+            isListeningForShortcut = true;
+            GUI.FocusControl(null); // remove keyboard focus
+        }
+        
+        GUI.enabled = true;
     }
 
     private int DrawIgnoredLayersSection()

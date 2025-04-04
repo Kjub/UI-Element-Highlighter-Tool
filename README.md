@@ -1,6 +1,6 @@
 # UI Element Highlighter Tool
 
-The **UI Element Highlighter Tool** is a powerful Unity Editor extension designed to improve the workflow for developers and designers working with Unity's UI system. This tool offers an intuitive interface within the Unity Editor, allowing users to easily navigate, identify, and interact with `RectTransform` components in the Scene View.
+The **UI Element Highlighter Tool** is an Unity Editor extension designed to improve the workflow for developers and designers working with Unity's UI system. This tool offers an intuitive interface within the Unity Editor, allowing users to easily navigate, identify, and interact with `RectTransform` components in the Scene View.
 
 ![UIElementHighlighterShowVideo](https://github.com/Kjub/UI-Element-Highlighter-Tool/assets/7487311/df0ca984-105d-48df-852b-fe5698e6caee)
 
@@ -27,7 +27,7 @@ To install the **UI Element Highlighter Tool**, add the package to your Unity pr
 The **UI Element Highlighter Tool** can be easily accessed in two ways:
 
 -   **Through the Unity Editor Toolbar**: Navigate to **Tools > UI Element Selector** to open the UI Element Selector window.
--   **Directly in the Scene/Prefab View**: Simply right-click on any UI element within the Scene or Prefab view to activate the highlighter tool and interact with the selected element.
+-   **Directly in the Scene/Prefab View**: Simply use keybind (default "H") on any UI element within the Scene or Prefab view to activate the highlighter tool and interact with the selected element. If you are using Unity6 and higher, you can also right-click and pick "UI Highlight" option from context menu.
 
 In the settings window, you are able to customize the highlight colors and select layers and tags to ignore, enhancing your workflow and focus on the elements that matter most to your project.
 

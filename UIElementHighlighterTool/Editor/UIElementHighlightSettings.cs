@@ -46,7 +46,9 @@ public class UIElementHighlighterSettings : EditorWindow
 
     private void OnEnable()
     {
-        logoTexture = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Editor/UIElementHighlighterTool/Editor/Assets/logo_name.png");
+        logoTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(
+            "Packages/com.kjub.uielementhighlighter/Editor/Assets/logo_name.png"
+        );
     }
 
     private void OnGUI()

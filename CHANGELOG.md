@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.3.1] - 04.04.2025
+
+###
+ - Fixed logo in settings window
+
 ## [0.3.0] - 04.04.2025
 
 ### Added

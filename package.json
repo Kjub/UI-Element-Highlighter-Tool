@@ -1,6 +1,6 @@
 {
 	"name": "com.kjub.uielementhighlighter",
-	"version": "0.3.0",
+	"version": "0.3.1",
 	"displayName": "UI Element Highlighter Tool",
 	"description": "A Unity Editor extension that improves workflow by allowing users to easily navigate, identify, and interact with RectTransform components in the Scene View. Features include interactive UI element listing, scene view highlighting with customizable colors, and the ability to ignore specific layers and tags.",
 	"unity": "2022.3",

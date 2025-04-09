@@ -39,7 +39,7 @@ public class UIElementSelector : EditorWindow
         }
     }
 
-    [MenuItem("Tools/UI-EHT/Element Selector")]
+    [MenuItem("Tools/UI Element Highlighter/Element Selector")]
     public static void ShowWindow()
     {
         GetWindow<UIElementSelector>("UI Element Selector").Show();
@@ -103,8 +103,8 @@ public class UIElementSelector : EditorWindow
         _uiElements.Clear(); // Clear existing items
         
         // Load settings from EditorPrefs
-        int ignoredLayerMask = EditorPrefs.GetInt(UIElementHighlighterSettings.IgnoredLayerMaskKey, 0);
-        string[] ignoredTags = EditorPrefs.GetString(UIElementHighlighterSettings.IgnoredTagsKey, "").Split(',');
+        int ignoredLayerMask = UIElementHighlighterSettings.GetIgnoredLayerMask();
+        string[] ignoredTags = UIElementHighlighterSettings.GetIgnoredTags().Split(',');
         
         foreach (RectTransform element in elements)
         {

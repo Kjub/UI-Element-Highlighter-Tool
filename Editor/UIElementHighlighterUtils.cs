@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEditor;
 using UnityEditor.Graphs;
 using UnityEngine;
 
@@ -6,6 +7,9 @@ namespace UIElementHighlighterTool.Editor
 {
     public static class UIElementHighlighterUtils
     {
+        
+        private const string ShortcutBindingKey = "UIElementHighlighter_ShortcutBinding";
+        
         public static Type GetTypeFromName(string typeName)
         {
             Type type = Type.GetType(typeName);
@@ -48,6 +52,42 @@ namespace UIElementHighlighterTool.Editor
             }
 
             return style;
+        }
+        
+        public static bool GetSavedBool(string key, bool defaultValue)
+        {
+            return EditorPrefs.GetBool(key, defaultValue);
+        }
+    
+        public static string GetSavedString(string key, string defaultValue)
+        {
+            return EditorPrefs.GetString(key, defaultValue);
+        }
+
+        public static Color GetSavedColor(string key, Color defaultColor)
+        {
+            string colorString = EditorPrefs.GetString(key, JsonUtility.ToJson(defaultColor, false));
+            return JsonUtility.FromJson<Color>(colorString);
+        }
+
+        public static void SaveColor(string key, Color color)
+        {
+            string colorString = JsonUtility.ToJson(color, false);
+            EditorPrefs.SetString(key, colorString);
+        }
+        
+        public static UIElementHighlighterBinding LoadShortcut()
+        {
+            string json = EditorPrefs.GetString(ShortcutBindingKey, "");
+            if (string.IsNullOrEmpty(json))
+                return new UIElementHighlighterBinding { mainKey = KeyCode.H, mouseButton = -1 };
+            return JsonUtility.FromJson<UIElementHighlighterBinding>(json);
+        }
+
+        public static void SaveShortcut(UIElementHighlighterBinding binding)
+        {
+            string json = JsonUtility.ToJson(binding);
+            EditorPrefs.SetString(ShortcutBindingKey, json);
         }
     }
 }

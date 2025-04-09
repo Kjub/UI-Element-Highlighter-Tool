@@ -6,20 +6,7 @@ namespace UIElementHighlighterTool.Editor
     public class UIElementHighlighterWelcome : EditorWindow
     {
         private const string WelcomeShownKey = "UIElementHighlighter_WelcomeShown";
-        private Texture2D welcomeLogo;
-
-        public static void ShowManually()
-        {
-            UIElementHighlighterWelcome window = GetWindow<UIElementHighlighterWelcome>("Welcome");
-            window.minSize = new Vector2(300, 200);
-            window.maxSize = new Vector2(450, 500);
-            window.position = new Rect(
-                (Screen.currentResolution.width - window.minSize.x) / 2,
-                (Screen.currentResolution.height - window.minSize.y) / 2,
-                window.maxSize.x,
-                window.maxSize.y
-            );
-        }
+        private Texture2D _welcomeLogo;
 
         [InitializeOnLoadMethod]
         private static void ShowOnFirstInstall()
@@ -36,10 +23,23 @@ namespace UIElementHighlighterTool.Editor
             ShowManually();
             EditorPrefs.SetBool(WelcomeShownKey, true);
         }
+        
+        private static void ShowManually()
+        {
+            UIElementHighlighterWelcome window = GetWindow<UIElementHighlighterWelcome>("Welcome");
+            window.minSize = new Vector2(300, 200);
+            window.maxSize = new Vector2(450, 500);
+            window.position = new Rect(
+                (Screen.currentResolution.width - window.minSize.x) / 2,
+                (Screen.currentResolution.height - window.minSize.y) / 2,
+                window.maxSize.x,
+                window.maxSize.y
+            );
+        }
 
         private void OnEnable()
         {
-            welcomeLogo = AssetDatabase.LoadAssetAtPath<Texture2D>(
+            _welcomeLogo = AssetDatabase.LoadAssetAtPath<Texture2D>(
                 "Packages/com.kjub.uielementhighlighter/Editor/Assets/logo512x512.png"
             );
 
@@ -65,12 +65,12 @@ namespace UIElementHighlighterTool.Editor
             GUILayout.Space(10);
 
             // Draw logo (square, centered)
-            if (welcomeLogo != null)
+            if (_welcomeLogo != null)
             {
                 float logoSize = Mathf.Min(position.width * 0.5f, 256f); // Max 256px width
                 GUILayout.BeginHorizontal();
                 GUILayout.FlexibleSpace();
-                GUILayout.Label(welcomeLogo, GUILayout.Width(logoSize), GUILayout.Height(logoSize));
+                GUILayout.Label(_welcomeLogo, GUILayout.Width(logoSize), GUILayout.Height(logoSize));
                 GUILayout.FlexibleSpace();
                 GUILayout.EndHorizontal();
 
@@ -87,7 +87,7 @@ namespace UIElementHighlighterTool.Editor
 
 
             GUILayout.Label(
-                $"This tool lets you detect, highlight and search through overlapping UI elements by pressing <color=\"green\">{UIElementHighlighterSettings.LoadShortcut()}</color> on top of UI element in the Scene.\n\n" +
+                $"This tool lets you detect, highlight and search through overlapping UI elements by pressing <color=\"green\">{UIElementHighlighterUtils.LoadShortcut()}</color> on top of UI element in the Scene.\n\n" +
                 $"You can customize the shortcut, colors and ignored layers/tags in the Settings window.",
                 wrapStyle,
                 GUILayout.ExpandWidth(true)
@@ -108,8 +108,6 @@ namespace UIElementHighlighterTool.Editor
                 UIElementHighlighterSettings.ShowWindow();
                 Close();
             }
-
-
         }
     }
 }

@@ -8,22 +8,22 @@ using UnityEngine;
 public class UIElementHighlighterSettings : EditorWindow
 {
 
-    private static Color _enabledButtonColor = new Color(0f, 0.33f, 0.11f);
-    private static Color _disabledButtonColor = new Color(0.33f, 0f, 0.02f);
+    private Color _enabledButtonColor = new Color(0f, 0.33f, 0.11f);
+    private Color _disabledButtonColor = new Color(0.33f, 0f, 0.02f);
     
     // Default values
     private static Color defaultFillColor = new Color(1, 1, 0, 0.25f);
     private static Color defaultOutlineColor = Color.yellow;
-    private static bool isExtensionEnabled;
-    private static int _ignoredLayerMask;
+    private bool isExtensionEnabled;
+    private int _ignoredLayerMask;
     
     private Texture2D logoTexture;
 
     // Keys for EditorPrefs
-    internal const string FillColorKey = "UIElementHighlighter_FillColor";
-    internal const string OutlineColorKey = "UIElementHighlighter_OutlineColor";
-    internal const string IgnoredLayerMaskKey = "UIElementHighlighter_IgnoredLayerMask";
-    internal const string IgnoredTagsKey = "UIElementHighlighter_IgnoredTags";
+    private const string FillColorKey = "UIElementHighlighter_FillColor";
+    private const string OutlineColorKey = "UIElementHighlighter_OutlineColor";
+    private const string IgnoredLayerMaskKey = "UIElementHighlighter_IgnoredLayerMask";
+    private const string IgnoredTagsKey = "UIElementHighlighter_IgnoredTags";
     private const string AutoCloseOnSelect = "UIElementHighlighter_AutoClose";
     private const string SelectComponent = "UIElementHighlighter_SelectComponent";
     private const string ExtensionEnabledKey = "UIElementHighlighter_Enabled";
@@ -31,14 +31,13 @@ public class UIElementHighlighterSettings : EditorWindow
     private const string _enabledText = "Extension is ENABLED \n Click to disable";
     private const string _disabledText = "Extension is DISABLED \n Click to enable";
     
-    private static bool isListeningForShortcut = false;
-    private static KeyCode currentShortcutKey;
-    private const string ShortcutKeyPref = "UIElementHighlighter_ShortcutKey";
+    private bool _isListeningForShortcut = false;
+    private KeyCode _currentShortcutKey;
     
-    private static List<string> ignoredTags = new List<string>();
+    private List<string> _ignoredTags = new List<string>();
     
 
-    [MenuItem("Tools/UI-EHT/Highlighter Settings")]
+    [MenuItem("Tools/UI Element Highlighter/Highlighter Settings")]
     public static void ShowWindow()
     {
         GetWindow<UIElementHighlighterSettings>("Highlighter Settings");
@@ -74,13 +73,13 @@ public class UIElementHighlighterSettings : EditorWindow
         GUILayout.Space(30f);
         
         // string selectComponent = EditorGUILayout.TextField("Select Component", GetSavedString(SelectComponent, "RectTransform"));
-        bool autoCloseOnSelect = EditorGUILayout.Toggle("Auto Close On Select", GetSavedBool(AutoCloseOnSelect, false));
+        bool autoCloseOnSelect = EditorGUILayout.Toggle("Auto Close On Select", UIElementHighlighterUtils.GetSavedBool(AutoCloseOnSelect, false));
         
         GUILayout.Space(10f);
 
         GUILayout.Label("Colors", UIElementHighlighterUtils.GetCenteredLabelStyle());
-        Color fillColor = EditorGUILayout.ColorField("Fill Color", GetSavedColor(FillColorKey, defaultFillColor));
-        Color outlineColor = EditorGUILayout.ColorField("Outline Color", GetSavedColor(OutlineColorKey, defaultOutlineColor));
+        Color fillColor = EditorGUILayout.ColorField("Fill Color", UIElementHighlighterUtils.GetSavedColor(FillColorKey, defaultFillColor));
+        Color outlineColor = EditorGUILayout.ColorField("Outline Color", UIElementHighlighterUtils.GetSavedColor(OutlineColorKey, defaultOutlineColor));
 
         int ignoredLayerMask = DrawIgnoredLayersSection();
         DrawIgnoredTagsSection();
@@ -92,12 +91,12 @@ public class UIElementHighlighterSettings : EditorWindow
 
         if (EditorGUI.EndChangeCheck())
         {
-            SaveColor(FillColorKey, fillColor);
-            SaveColor(OutlineColorKey, outlineColor);
+            UIElementHighlighterUtils.SaveColor(FillColorKey, fillColor);
+            UIElementHighlighterUtils.SaveColor(OutlineColorKey, outlineColor);
             EditorPrefs.SetBool(AutoCloseOnSelect, autoCloseOnSelect);
             // EditorPrefs.SetString(SelectComponent, selectComponent);
             EditorPrefs.SetInt(IgnoredLayerMaskKey, ignoredLayerMask);
-            EditorPrefs.SetString(IgnoredTagsKey, string.Join(",", ignoredTags));
+            EditorPrefs.SetString(IgnoredTagsKey, string.Join(",", _ignoredTags));
         }
     }
 
@@ -159,13 +158,13 @@ public class UIElementHighlighterSettings : EditorWindow
         
         DrawShortcutButton();
 
-        if (isListeningForShortcut)
+        if (_isListeningForShortcut)
         {
             Event e = Event.current;
             
             if (e.type == EventType.KeyDown && e.keyCode == KeyCode.Escape)
             {
-                isListeningForShortcut = false;
+                _isListeningForShortcut = false;
                 Repaint();
                 e.Use();
                 return;
@@ -181,7 +180,7 @@ public class UIElementHighlighterSettings : EditorWindow
                 }
                 else
                 {
-                    var newBinding = new UIElementHighlighterBinding
+                    UIElementHighlighterBinding newBinding = new UIElementHighlighterBinding
                     {
                         mainKey = e.keyCode,
                         mouseButton = -1,
@@ -190,15 +189,15 @@ public class UIElementHighlighterSettings : EditorWindow
                         alt = e.alt
                     };
 
-                    SaveShortcut(newBinding);
-                    isListeningForShortcut = false;
+                    UIElementHighlighterUtils.SaveShortcut(newBinding);
+                    _isListeningForShortcut = false;
                     Repaint();
                     e.Use();
                 }
             }
             else if (e.type == EventType.MouseDown)
             {
-                var newBinding = new UIElementHighlighterBinding
+                UIElementHighlighterBinding newBinding = new UIElementHighlighterBinding
                 {
                     mainKey = KeyCode.None,
                     mouseButton = e.button,
@@ -207,8 +206,8 @@ public class UIElementHighlighterSettings : EditorWindow
                     alt = e.alt
                 };
 
-                SaveShortcut(newBinding);
-                isListeningForShortcut = false;
+                UIElementHighlighterUtils.SaveShortcut(newBinding);
+                _isListeningForShortcut = false;
                 Repaint();
                 e.Use();
             }
@@ -218,10 +217,10 @@ public class UIElementHighlighterSettings : EditorWindow
 
     private void DrawShortcutButton()
     {
-        UIElementHighlighterBinding current = LoadShortcut();
+        UIElementHighlighterBinding current = UIElementHighlighterUtils.LoadShortcut();
         
         string buttonText;
-        if (isListeningForShortcut)
+        if (_isListeningForShortcut)
         {
             buttonText = "Press key or mouse button to set shortcut... (CTRL/SHIFT/ALT + Key or Mouse Button)";
         }
@@ -230,7 +229,7 @@ public class UIElementHighlighterSettings : EditorWindow
             buttonText = $"Click to change shortcut\n(Current: {current})";
         }
         
-        if (isListeningForShortcut == true)
+        if (_isListeningForShortcut == true)
         {
             GUI.enabled = false;
         }
@@ -243,7 +242,7 @@ public class UIElementHighlighterSettings : EditorWindow
         
         if (GUILayout.Button(buttonText, shortcutButtonStyle, GUILayout.ExpandWidth(true)))
         {
-            isListeningForShortcut = true;
+            _isListeningForShortcut = true;
             GUI.FocusControl(null); // remove keyboard focus
         }
         
@@ -277,65 +276,53 @@ public class UIElementHighlighterSettings : EditorWindow
 
         // Load ignored tags from EditorPrefs
         string savedIgnoredTags = EditorPrefs.GetString(IgnoredTagsKey, "");
-        ignoredTags = new List<string>(savedIgnoredTags.Split(','));
+        _ignoredTags = new List<string>(savedIgnoredTags.Split(','));
 
         foreach (string tag in InternalEditorUtility.tags)
         {
-            bool isIgnored = ignoredTags.Contains(tag);
+            bool isIgnored = _ignoredTags.Contains(tag);
             bool shouldBeIgnored = EditorGUILayout.Toggle(tag, isIgnored);
             if (shouldBeIgnored && !isIgnored)
             {
-                ignoredTags.Add(tag);
+                _ignoredTags.Add(tag);
             }
             else if (!shouldBeIgnored && isIgnored)
             {
-                ignoredTags.Remove(tag);
+                _ignoredTags.Remove(tag);
             }
         }
 
         EditorGUI.indentLevel--;
     }
     
-    private static bool GetSavedBool(string key, bool defaultValue)
-    {
-        return EditorPrefs.GetBool(key, defaultValue);
-    }
-    
-    private static string GetSavedString(string key, string defaultValue)
-    {
-        return EditorPrefs.GetString(key, defaultValue);
-    }
-
-    private static Color GetSavedColor(string key, Color defaultColor)
-    {
-        string colorString = EditorPrefs.GetString(key, JsonUtility.ToJson(defaultColor, false));
-        return JsonUtility.FromJson<Color>(colorString);
-    }
-
-    private static void SaveColor(string key, Color color)
-    {
-        string colorString = JsonUtility.ToJson(color, false);
-        EditorPrefs.SetString(key, colorString);
-    }
-    
     public static Color GetFillColor()
     {
-        return GetSavedColor(FillColorKey, defaultFillColor);
+        return UIElementHighlighterUtils.GetSavedColor(FillColorKey, defaultFillColor);
     }
 
     public static Color GetOutlineColor()
     {
-        return GetSavedColor(OutlineColorKey, defaultOutlineColor);
+        return UIElementHighlighterUtils.GetSavedColor(OutlineColorKey, defaultOutlineColor);
     }
     
     public static string GetSelectedComponent()
     {
-        return GetSavedString(SelectComponent, "RectTransform");
+        return UIElementHighlighterUtils.GetSavedString(SelectComponent, "RectTransform");
     }
 
     public static bool GetAutoCloseOnSelect()
     {
-        return GetSavedBool(AutoCloseOnSelect, false);
+        return UIElementHighlighterUtils.GetSavedBool(AutoCloseOnSelect, false);
+    }
+    
+    public static int GetIgnoredLayerMask()
+    {
+        return EditorPrefs.GetInt(IgnoredLayerMaskKey, 0);
+    }
+    
+    public static string GetIgnoredTags()
+    {
+        return EditorPrefs.GetString(IgnoredTagsKey, "");
     }
     
     // Wrapper methods for EditorGUILayout's static methods
@@ -347,22 +334,6 @@ public class UIElementHighlighterSettings : EditorWindow
     private int ConcatenatedLayersMaskToLayerMask(int concatenatedMask)
     {
         return InternalEditorUtility.ConcatenatedLayersMaskToLayerMask(concatenatedMask);
-    }
-    
-    private const string ShortcutBindingKey = "UIElementHighlighter_ShortcutBinding";
-
-    public static UIElementHighlighterBinding LoadShortcut()
-    {
-        string json = EditorPrefs.GetString(ShortcutBindingKey, "");
-        if (string.IsNullOrEmpty(json))
-            return new UIElementHighlighterBinding { mainKey = KeyCode.H, mouseButton = -1 };
-        return JsonUtility.FromJson<UIElementHighlighterBinding>(json);
-    }
-
-    private static void SaveShortcut(UIElementHighlighterBinding binding)
-    {
-        string json = JsonUtility.ToJson(binding);
-        EditorPrefs.SetString(ShortcutBindingKey, json);
     }
     
     // Helper method to create a colored texture

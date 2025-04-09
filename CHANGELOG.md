@@ -1,6 +1,10 @@
 # Changelog
 
-# Changelog
+## [1.0.0] - 09.04.2025
+
+### Changed
+
+-   Refactored code and got it ready to release!
 
 ## [0.3.4] - 04.04.2025
 

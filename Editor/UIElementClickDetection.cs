@@ -15,8 +15,6 @@ public static class UIElementClickDetection
     public static event ElementsClickedHandler OnElementsClicked;
     
     private const string ExtensionEnabledKey = "UIElementHighlighter_Enabled";
-    private static bool isRightMouseDown = false;
-    private static bool hasDragged = false;
     
     private static Vector2 _mousePosition = new Vector2();
     private static Camera _sceneDrawingCamera = null;
@@ -47,7 +45,7 @@ public static class UIElementClickDetection
 
     private static void OnSceneGUI(SceneView sceneView)
     {
-        UIElementHighlighterBinding binding = UIElementHighlighterSettings.LoadShortcut();
+        UIElementHighlighterBinding binding = UIElementHighlighterUtils.LoadShortcut();
 
         Event e = Event.current;
         _mousePosition = e.mousePosition;
@@ -140,17 +138,17 @@ public static class UIElementClickDetection
     private static void OnHierarchyChanged()
     {
         allRectTransforms.Clear();
-        Canvas[] canvases = Object.FindObjectsOfType<Canvas>(true);
+        Canvas[] canvases = Object.FindObjectsByType<Canvas>(FindObjectsSortMode.InstanceID);
         foreach (Canvas canvas in canvases)
         {
             allRectTransforms.AddRange(canvas.GetComponentsInChildren<RectTransform>(true));
         }
         
         // In case of being in a prefab stage, attempt to find RectTransforms in the prefab.
-        var prefabStage = PrefabStageUtility.GetCurrentPrefabStage();
+        PrefabStage prefabStage = PrefabStageUtility.GetCurrentPrefabStage();
         if (prefabStage != null)
         {
-            var rectTransformsInPrefab = prefabStage.prefabContentsRoot.GetComponentsInChildren<RectTransform>(true);
+            RectTransform[] rectTransformsInPrefab = prefabStage.prefabContentsRoot.GetComponentsInChildren<RectTransform>(true);
             allRectTransforms.AddRange(rectTransformsInPrefab);
         }
     }
